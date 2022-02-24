@@ -1,11 +1,25 @@
-# vue3
+## vue3新增功能
 
-- 
-  
+### 性能提升
 
+- 打包大小减少了41%
+- 渲染更快
+- **使用Proxy代替了defineProperty实现数响应式**
+- **重写虚拟DOM以及实现Tree-Shking(摇树)**
 
+### 新增特性
 
-### setup
+- **Compostion-api**
+  - setup
+- 新组件
+  - Fragment - 文档碎片
+  - Teleport - 瞬移组件的位置
+  - Suspense - 异步加载组件的loading界面
+- 其他api更新
+
+### Compositon-api (常用)
+
+##### setup
 
 - 执行时机
 
@@ -24,13 +38,15 @@
   - props：组件传入的属性
   - context：三个常见属性 attrs、slot、emit
 
-### reactive、ref 与 toRefs
+##### reactive、ref 与 toRefs
 
 - vue2 在data里定义数据，在vue3可以在reactive 和ref里定义
 
 - `reactive`函数确实可以代理一个对象， 但是不能代理基本类型，例如字符串、数字、boolean 等
 
 - `ref`可以代理数字、字符串、boolean
+
+- reactive  和 ref 内部是基于 ES 6 的`Proxy`实现，通过代理使对象内部数据都是响应式的
 
   - ```js
     <!-- 解构前这样表示 -->
@@ -42,6 +58,8 @@
     import { defineComponent, reactive, ref, toRefs } from "vue";
     
       setup(props, context) {
+        // let obj1={name:'xx',age:12}; // 直接这样定义 数据不是响应式的
+          
     	const num1 = ref(1)
         // console.log(num1.value)
         let p1 = reactive({ name: "亚索", age: 18 })
@@ -58,17 +76,7 @@
   1. 问题根源在于准确理解ES6解构发生了什么，解构相当于重新声明变量
   2. java等高级面向对象语言中对每个数据赋值和取值都强行要求采用赋值器set和取值器get。 有了这两个方法就可以在赋值或取值时进行拦截，在拦截中触发连锁修改，实现响应。 javasript没有这样的强制机制，都是直接访问，所以无法实现set拦截。 所以就利用了JavaScript提供的defineProperty方法，该方法的作用是为对象增加属性，并且可以同时定义该属性的赋值器set，这样就实现了可拦截，从而再做到响应式触发。 ref是对被包裹对象整体做了一个赋值器拦截，没有分别对它的属性，以及属性的属性做赋值器，所以没能实现拦截。没有拦截就不能做到连锁修改，也就不能做到响应式。 torefs是对一个对象的所有属性做ref()，并返回了和属性同名的ref对象，它是同名，但不是同一对象，它内部根据赋值保留与原对象属性的联系。
 
-
-
-### 声明周期
-
-- 注意vue3的钩子函数，是需要import 从vue导入的，并且有`on`前缀，比如 `onCreated`
-
-- <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/de01e730e563406cbf3399861fa23aa4~tplv-k3u1fbpfcp-watermark.awebp" alt="img" style="zoom:40%;" />
-
-
-
-### watch 与 watchEffect
+##### watch 与 watchEffect
 
 - 也是需要引入
 
@@ -129,15 +137,76 @@
 
 
 
+### Compositon-api (其他)
+
+##### 响应式基础API
+
+- [参考文档](https://v3.cn.vuejs.org/api/basic-reactivity.html#reactive)
+
+- `readonly` 只读
+- shallowReactive 浅劫持浅响应式
+  - 
+- 等...
+
+##### Refs
+
+- [参考文档](https://v3.cn.vuejs.org/api/refs-api.html)
+
+- customRef
+  - 可以搞防抖函数小例子 - 官方有示例
+- 等...
+
+##### 响应式数据的判断
+
+- `isRef`:检查一个值是否为ref对象
+- `isReactive`:检查对象是否是由 reactive创建的响应式代理
+- `isReadonly`:检查对象是否由readonly创建
+- `isProxy`：检查对象是否是由 reactive 或 readonly创建的 proxy
+
+
+
 ### vue2和vue3响应式对比
 
-- 为什么要将`Object.defineProperty`换掉呢？  (没有无缘无故的爱，也没有无缘无故的恨)
+- 为什么要将`Object.defineProperty`换掉呢？
   - 在vue2里经常遇到一个问题，数据更新了为什么页面不更新呢？什么时候使用`$set`,什么时候使用`$forceUpdate`强制更新，一切根源都是`Object.defineProperty`
+  
 - `Object.defineProperty`和`Proxy`
+  
   1. `Object.defineProperty`只能劫持对象的属性，而Proxy是直接代理对象
      - 由于`Object.defineProperty`只能劫持对象属性，需要遍历对象的每一个属性，**如果属性也是对象的话，就需要递归进行深度遍历。**而`Proxy`直接代理对象，不需要遍历操作
   2. `Object.defineProperty`对新增属性需要手动进行`Observe`
      - 因为`Object.defineProperty`劫持的是对象的属性，所以新增属性时，需要重新遍历对象，对新增属性再次进行`Object.defineProperty`进行劫持，也就是说**需要使用`$set`才能保证新增的属性也是响应式的**,**`$set`内部也是通过调用`Object.defineProperty`去处理的**
+  
+- vue2的响应式
+
+  - 核心:
+
+    - 对象:通过defineProperty对  对象已有的属性值进行读取和修改进行劫持(拦截)
+
+    - 数组:通过重写数组更新数组一系列更新元素的方法来实现元素的修改和劫持
+
+    - ```js
+      Object.defineProperty(data,'count',{
+      	get () {}
+          set () {}
+      })
+      ```
+
+  - 问题:
+
+    - 对象:对象直接新添加的属性或删除已有属性，页面不会自动更新
+    - 数组:直接通过下标替换元素或更新length，页面不会自动更新 arr[1]={}
+    - **所以才会使用 $set来更新数据，保证是响应式的**
+
+- vue3
+
+  - 核心:
+    - 通过Proxy代理:拦截data任意属性的操作(13种)，包括属性值的读写 添加 删除 等...
+    - 通过 Reflect(反射):动态对被代理对象的相应属性进行特定操作
+    - [参考文档](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
+
+  - 问题
+
 
 
 
@@ -161,7 +230,7 @@
 
 ### Suspense
 
-- 比如在请求接口的时候 搞一个loading 动画效果 就可以用这个
+- 比如在请求接口的 时候 搞一个loading 动画效果 就可以用这个
 
 - ```js
   // 父组件
@@ -245,6 +314,12 @@
   - `Vue.observable`（用 `Vue.reactive` 替换）
   - Vue.set
   - Vue.delete
+
+### 声明周期
+
+- 注意vue3的钩子函数，是需要import 从vue导入的，并且有`on`前缀，比如 `onCreated`
+
+- <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/de01e730e563406cbf3399861fa23aa4~tplv-k3u1fbpfcp-watermark.awebp" alt="img" style="zoom:40%;" />
 
 
 
@@ -386,6 +461,9 @@
 
 - 2x: 同时使用v-if 和 v-for , v-for 会优先
 - 3x: v-if 优先级会大于v-for 
-
 - v-on.native 修饰符移出
+
+
+
+
 
