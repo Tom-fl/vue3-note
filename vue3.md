@@ -201,10 +201,10 @@
 - vue3
 
   - 核心:
+    - **Vue3中使用了`Proxy`配合`Reflect`代替了Vue2中的Object.defineProperty() 实现数据的响应式(数据代理)**
     - 通过Proxy代理:拦截data任意属性的操作(13种)，包括属性值的读写 添加 删除 等...
     - 通过 Reflect(反射):动态对被代理对象的相应属性进行特定操作
     - [参考文档](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
-
   - 问题
 
 
@@ -320,6 +320,25 @@
 - 注意vue3的钩子函数，是需要import 从vue导入的，并且有`on`前缀，比如 `onCreated`
 
 - <img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/de01e730e563406cbf3399861fa23aa4~tplv-k3u1fbpfcp-watermark.awebp" alt="img" style="zoom:40%;" />
+
+
+
+### Composition API VS Option API
+
+##### Option API 的问题
+
+- 在传统的 Vue OptionsAPI 中，新增或者修改一个需求，就需要分别在 data，methods，computed 里修改 ，滚动条反复上下移动
+- ![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f84e4e2c02424d9a99862ade0a2e4114~tplv-k3u1fbpfcp-watermark.image)
+- 
+
+![img](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e5ac7e20d1784887a826f6360768a368~tplv-k3u1fbpfcp-watermark.image)
+
+#####  使用 Compisition API
+
+- 我们可以更加优雅的组织我们的代码，函数。让相关功能的代码更加有序的组织在一起
+- ![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/bc0be8211fc54b6c941c036791ba4efe~tplv-k3u1fbpfcp-watermark.image)
+- ![img](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6cc55165c0e34069a75fe36f8712eb80~tplv-k3u1fbpfcp-watermark.image)
+- ![img](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2c421e5392504ecc94c222057dba338a~tplv-k3u1fbpfcp-watermark.image)
 
 
 
@@ -465,5 +484,8 @@
 
 
 
+##### 父组件传值  provide和inject
 
+- **这两个方法只能在setup()里调用**
+- provide可以向所有子孙组件提供数据以及提供修改数据的方法，子孙组件用inject使用数据
 
